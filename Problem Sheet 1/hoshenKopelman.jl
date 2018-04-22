@@ -1,9 +1,51 @@
 print("Info: hoshenKopelman.jl is called. ");
 
+# compares if there is something common between arr1 and arr2
+function isCommonIn(arr1, arr2)
+    for i = 1:length(arr1)
+        for j = 1:length(arr2)
+            if(arr1[i] == arr2[j])
+                return true;
+            end
+        end
+    end
+    return false;
+end
+
+function getEquivalentClasses(in_array)
+    out_array = [];
+    matchFound = false;
+
+    for i = 1:length(in_array) 
+        matchFound = false;
+        if(i == 1)
+            push!(out_array, in_array[i]);
+        else
+            for k = 1:length(out_array)
+                if( isCommonIn(in_array[i], out_array[k]) )
+                    for j = 1:length(in_array[i])
+                        push!(out_array[k], in_array[i][j]);                        
+                        #print("\n   out[$k] = $(out_array[k]),  \t\t\t in[$i][$j] = $(in_array[i][j]) ");
+                    end
+                    matchFound = true;
+                    break;
+          
+                end
+            end
+            if(matchFound == false)
+                push!(out_array, in_array[i]);
+            end
+        end
+    end
+
+    for i = 1:length(out_array)
+        out_array[i] = union(out_array[i]); 
+    end
+
+    return out_array;
+end
 
 
-
-using Gallium; 
 
 # checks if a cell is occupied
 function isOccupied(mat, i, j)
@@ -58,10 +100,13 @@ function smallerOf(a, b)
     end
 end
 
+
+# create a new label (looks unnecessary, but helps to understand the flow)
 function newLabel(highestLabel)
     return highestLabel + 1;     
 end
 
+# 
 function setLabel(targetMat, labelMat, i, j, currentLabel)
     eqUpCell = 0;
     eqLeftCell = 0;
@@ -70,46 +115,57 @@ function setLabel(targetMat, labelMat, i, j, currentLabel)
         highestLabel = maximum(labelMat);
         labelMat[i,j] = newLabel(highestLabel);
         currentLabel = labelMat[i,j];
-        print("debug: targetMat[$i, $j] is NOT clustered. \n");
-        print("debug: setting labelMat[$i, $j] = $currentLabel = currentLabel, highestLabel = $highestLabel \n");
-        print("--- \n \n");
 
     elseif( isClustered(targetMat, i, j)[1] == true )
         _clustWith = isClustered(targetMat, i, j)[2];
-        print("debug: targetMat[$i, $j] is clustered. \n");
-        print("\n");
 
         if(_clustWith == "left")
             labelMat[i,j] = labelMat[i, j - 1];
             currentLabel = labelMat[i,j];
             highestLabel = maximum(labelMat);
-            print("     debug: found cluster with $_clustWith \n");
-            print("     debug: labelMat[$i, $j] = $currentLabel = currentLabel, highestLabel = $highestLabel \n");
-            print("--- \n \n");
 
         elseif(_clustWith == "up" )
             labelMat[i,j] = labelMat[i - 1, j];
             currentLabel = labelMat[i,j];  
             highestLabel = maximum(labelMat);  
-            print("     debug:found cluster with $_clustWith \n");
-            print("     debug: labelMat[$i, $j] = $currentLabel = currentLabel, highestLabel = $highestLabel \n");
-            print("--- \n \n");
+
         elseif(_clustWith == "both")
             labelMat[i,j] = smallerOf(labelMat[i, j - 1], labelMat[i - 1,j]);
             currentLabel = labelMat[i,j];
             highestLabel = maximum(labelMat);
-            print("     debug: found cluster with $_clustWith \n");
-            print("     debug: labelMat[$i, $j] = $currentLabel = currentLabel, highestLabel = $highestLabel \n");
-            print("     debug: $(labelMat[i, j - 1]) and $(labelMat[i - 1,j]) are same! \n");
             eqUpCell = labelMat[i-1, j];
             eqLeftCell = labelMat[i, j - 1];
-
-            print("--- \n \n");
         end
     end
     return (currentLabel, [eqLeftCell, eqUpCell]);
 end
 
+
+function getLabelMat(targetMat)
+    labelMat = targetMat*0;
+    currentLabel = 0;
+    eqLabels = [];
+    highestLabel = maximum(labelMat);
+    for i = 1:size(labelMat)[1]
+        for j = 1:size(labelMat)[2]         
+            if(targetMat[i,j] == 0)
+                labelMat[i,j] = 0;
+            else 
+                setLabel_Output = setLabel(targetMat, labelMat, i, j, currentLabel);
+                currentLabel = setLabel_Output[1];
+
+                if(setLabel_Output[2][1] != setLabel_Output[2][2])
+                    push!(eqLabels, setLabel_Output[2]);
+                end
+            end
+        end
+    end
+    
+    println(eqLabels);
+    eqLabelsMerged = getEquivalentClasses(eqLabels);
+    println(eqLabelsMerged);
+    return [labelMat, eqLabelsMerged];
+end
 
 function mergeEqualLabels(mergerArr, labelMat)
     tempLm =  labelMat;
@@ -124,39 +180,6 @@ function mergeEqualLabels(mergerArr, labelMat)
     end
     return tempLm;
 end
-
-
-
-
-
-
-function getLabelMat(targetMat)
-    labelMat = targetMat*0;
-    currentLabel = 0;
-    eqLabels = [];
-    highestLabel = maximum(labelMat);
-    for i = 1:size(labelMat)[1]
-        for j = 1:size(labelMat)[2]         
-            if(targetMat[i,j] == 0)
-                labelMat[i,j] = 0;
-                print("debug:labelMat[$i, $j] = 0 \n");
-                print("--- \n \n");
-            else 
-                setLabel_Output = setLabel(targetMat, labelMat, i, j, currentLabel);
-                currentLabel = setLabel_Output[1];
-
-                if(setLabel_Output[2][1] != setLabel_Output[2][2])
-                    push!(eqLabels, setLabel_Output[2]);
-                end
-
-            end
-        end
-    end
-    print(eqLabels);
-
-    return labelMat;
-end
-
 
 
 
