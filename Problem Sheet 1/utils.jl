@@ -10,27 +10,6 @@ function isCommonIn(arr1, arr2)
     return false;
 end
 
-# takes two arrays, compare them, returns a structure with "uniqueness". 
-function uniquizeArrays(arr1, arr2)
-    arr1 = union(arr1);
-    arr2 = union(arr2);
-    uniqueArr = [];
-    push!(uniqueArr, arr1);
-    if(isCommonIn(arr1, arr2) == true)
-        for i = 1:length(arr2)        
-            push!(uniqueArr[1], arr2[i]);
-        end
-        uniqueArr = union(uniqueArr[1]);
-    else
-        push!(uniqueArr, arr2);
-    end
-      
-    return uniqueArr;
-end
-
-
-
-
 function getEquivalentClasses(in_array)
     out_array = [];
     matchFound = false;
@@ -77,3 +56,4 @@ print("\nInfo: utils.jl is called.")
 
 
 
+  

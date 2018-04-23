@@ -1,5 +1,5 @@
-using PyPlot;
-
+# generates an LxL matrix with random entries (either 0 or 1)
+# probability p is still not taken care of.  
 function RandMatZeroOneWithDimAndProb(L, p)
   tempRandMat = reshape(1:L*L, L, L)*0;
   noOfRows = size(tempRandMat)[1];
@@ -15,6 +15,8 @@ function RandMatZeroOneWithDimAndProb(L, p)
   return tempRandMat;
 end
 
+# a wrapper around PyPlots matshow() function to plot a matrix. 
+using PyPlot;
 function matrixPlot(in_mat)
   matshow(in_mat);  
 end

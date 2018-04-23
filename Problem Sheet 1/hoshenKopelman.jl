@@ -12,6 +12,10 @@ function isCommonIn(arr1, arr2)
     return false;
 end
 
+# takes a parent array of several children arrays as input, checks if those children arrays have common elements among each other.
+# if yes, then merge those children arrays into a single child array. 
+# if no, then appends a new child array. 
+# returns the parent array with equivalence classes
 function getEquivalentClasses(in_array)
     out_array = [];
     matchFound = false;
@@ -63,10 +67,8 @@ function isClustered(mat, i, j)
     elseif(i > 1 && j > 1)
         if(isOccupied(mat, i, j - 1) == true && isOccupied(mat, i - 1, j) == true)
             return [true, "both"];
-              
         elseif(isOccupied(mat, i, j - 1) == true)
             return [true, "left"];
-        
         elseif(isOccupied(mat, i - 1, j) == true)
             return [true, "up"];
         else
@@ -106,7 +108,7 @@ function newLabel(highestLabel)
     return highestLabel + 1;     
 end
 
-# 
+# sets a label of a matrix-entry according to Hoshen-Kopelman algorithm
 function setLabel(targetMat, labelMat, i, j, currentLabel)
     eqUpCell = 0;
     eqLeftCell = 0;
@@ -133,7 +135,7 @@ function setLabel(targetMat, labelMat, i, j, currentLabel)
             labelMat[i,j] = smallerOf(labelMat[i, j - 1], labelMat[i - 1,j]);
             currentLabel = labelMat[i,j];
             highestLabel = maximum(labelMat);
-            eqUpCell = labelMat[i-1, j];
+            eqUpCell = labelMat[i - 1, j];
             eqLeftCell = labelMat[i, j - 1];
         end
     end
@@ -141,8 +143,35 @@ function setLabel(targetMat, labelMat, i, j, currentLabel)
 end
 
 
+#checks if an element exists in an array
+function doesExistIn(arr, el)
+    for i = 1:length(arr) 
+        if(arr[i] == el)
+            return true;
+        end
+    end    
+    return false;
+end
+
+# merges equivalent clusters (in hoshen-kopelman, the ones resulting "both")
+function mergeEquivalentClusters(labelMat, mergerArray)
+    tempLabelMat = labelMat;
+    for k = 1:length(mergerArray) 
+        for i = 1:size(tempLabelMat)[1] 
+            for j = 1:size(tempLabelMat)[2] 
+                if( doesExistIn(mergerArray[k], tempLabelMat[i,j]) == true)
+                    tempLabelMat[i,j] = mergerArray[k][1];
+                end
+            end    
+        end      
+    end  
+    return tempLabelMat;
+end
+
+
+
 function getLabelMat(targetMat)
-    labelMat = targetMat*0;
+    labelMat = targetMat * 0;
     currentLabel = 0;
     eqLabels = [];
     highestLabel = maximum(labelMat);
@@ -162,24 +191,19 @@ function getLabelMat(targetMat)
     end
     
     println(eqLabels);
-    eqLabelsMerged = getEquivalentClasses(eqLabels);
+    print("\n");
+    # this is a hack. for some use cases i found some clusters not merged. so to make sure, running the merging process second time crears them. 
+    # sorry for the unsmartness, but it works. 
+    eqLabelsMerged = getEquivalentClasses(getEquivalentClasses(eqLabels));
     println(eqLabelsMerged);
-    return [labelMat, eqLabelsMerged];
+    print("\n");
+    finalLabelMat = mergeEquivalentClusters(labelMat, eqLabelsMerged);
+    return finalLabelMat;
 end
 
-function mergeEqualLabels(mergerArr, labelMat)
-    tempLm =  labelMat;
-    for k = 1:length(mergerArr)
-        for i=1:size(tempLm)[1]
-            for j=1:size(tempLm)[2]
-                if(tempLm[i,j] == mergerArr[k][1] || tempLm[i,j] == mergerArr[k][2] )
-                   tempLm[i,j] =  smallerOf( mergerArr[k][1], mergerArr[k][2]  );
-                end
-            end
-        end
-    end
-    return tempLm;
+# counts the number of clusters from a labeled-matrix
+function getNoOfClusters(labelMat)
+    clustArray = union(labelMat);
+    return length(clustArray)-1;
+    # subtraction by 1 is because 0-label is also considered as a cluster
 end
-
-
-
